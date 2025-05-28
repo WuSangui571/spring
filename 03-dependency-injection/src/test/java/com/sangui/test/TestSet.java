@@ -25,6 +25,20 @@ import java.util.Date;
  */
 public class TestSet {
     @Test
+    public void testProperties(){
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring-properties.xml");
+        MyDataSource myDataSource = context.getBean("myDataSource", MyDataSource.class);
+        System.out.println(myDataSource);
+    }
+
+    @Test
+    public void testAutowire(){
+        ApplicationContext context = new ClassPathXmlApplicationContext("spring-autowire.xml");
+        OrderService orderService = context.getBean("orderService", OrderService.class);
+        orderService.generate();
+    }
+
+    @Test
     public void testPropUtil(){
         ApplicationContext context = new ClassPathXmlApplicationContext("spring-util.xml");
         MyDataSource1 myDataSource1 = context.getBean("myDataSource1", MyDataSource1.class);

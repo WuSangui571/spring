@@ -12,6 +12,10 @@ import com.sangui.mapper.OrderMapper;
 public class OrderService {
     OrderMapper orderMapper;
 
+    public OrderMapper getOrderMapper() {
+        return orderMapper;
+    }
+
     public void setOrderMapper(OrderMapper orderMapper) {
         this.orderMapper = orderMapper;
     }
