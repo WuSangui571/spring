@@ -211,4 +211,189 @@ Spring中的BeanFactory就使用了简单工厂模式。
 
 ## 3. 工厂方法模式
 
+Factory Method Pattern
+
+工厂方法模式既保留了简单工厂模式的优点，同时又解决了简单工厂的缺点。
+
++ 怎么解决？
+
+  + 就是一个工厂对应生产一个产品
+
+  + 这样工厂就不是全能类了，不是上帝类了，另外也可以符合OCP开闭原则。
+
++ 工厂方法模式的角色包括：
+
+  + 抽象产品角色
+    + Weapon
+
+  + 具体产品角色
+    + Dagger
+    + Gun
+
+  + 抽象工厂角色
+    + WeapnFactory
+
+  + 具体工厂角色
+    + DaggerFactory
+    + GunFactory
+
++ 工厂方法模式的优点：
+
+  当你扩展一个产品的时候，符合OCP原则，因为只需要添加两个类，一个类是具体产品类，一个是具体产品工厂类。都是添加类，没有修改之前的代码 ，所以符合OCP原则
+
++ 工厂方法模式的缺点：
+
+  每次增加一个产品的时候，都需要增加一个具体类和对象实现工厂，使得系统中的类的个数成倍增加，在一定程度上增加了系统的复杂度，同时也增加了系统具体类的依赖，这并不是什么好事
+
++ 我的程序
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 具体产品角色：Dagger
+   * @Version: 1.0
+   */
+  public class Dagger extends Weapon{
+      @Override
+      public void attack() {
+          System.out.println("匕首开始攻击了！！");
+      }
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 具体工厂角色：GunFactory
+   * @Version: 1.0
+   */
+  public class DaggerFactory extends WeaponFactory {
+      @Override
+      public Weapon get() {
+          return new Dagger();
+      }
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 具体产品角色：Gun
+   * @Version: 1.0
+   */
+  public class Gun extends Weapon{
+      @Override
+      public void attack() {
+          System.out.println("枪开始射击了！！");
+      }
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 具体工厂角色： GunFactory
+   * @Version: 1.0
+   */
+  public class GunFactory extends WeaponFactory{
+      @Override
+      public Weapon get() {
+          return new Gun();
+      }
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 抽象产品角色
+   * @Version: 1.0
+   */
+  abstract public class Weapon {
+      public abstract void attack();
+  }
+  package com.sangui.simple.factory;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-28
+   * @Description: 工厂类角色：武器工厂
+   * @Version: 1.0
+   */
+  public class WeaponFactory {
+      /**
+       * 静态方法，要获取什么产品，就看你传什么参数，传 TANK 获取坦克，传 DAGGER 获取匕首，传 FIGHTER 获取战斗机
+       * @param weaponType
+       * @return
+       */
+      public static Weapon get(String weaponType){
+          if ("TANK".equals(weaponType)) {
+              return new Tank();
+          }
+          if ("DAGGER".equals(weaponType)){
+              return new Dagger();
+          }
+          if ("FIGHTER".equals(weaponType)){
+              return new Fighter();
+          }
+  
+          return null;
+      }
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 抽象工厂角色
+   * @Version: 1.0
+   */
+  abstract public class WeaponFactory {
+      /**
+       * 这个方法不是静态的。是实例方法
+       * @return 返回武器
+       */
+      abstract public Weapon get();
+  }
+  ```
+
+  ```
+  package com.sangui.factory.method;
+  /**
+   * @Author: sangui
+   * @CreateTime: 2025-05-29
+   * @Description: 客户端程序
+   * @Version: 1.0
+   */
+  public class Client {
+      public static void main(String[] args) {
+          WeaponFactory weaponFactory1 = new DaggerFactory();
+          WeaponFactory weaponFactory2 = new GunFactory();
+          Weapon weapon1 = weaponFactory1.get();
+          Weapon weapon2 = weaponFactory2.get();
+          weapon1.attack();
+          weapon2.attack();
+      }
+  }
+  ```
+
 ## 4. 抽象工厂模式（了解）
+
+spring中并没有用到这个抽象工厂模式，但他解决了工厂方法模式的缺点，这里只做了解
+
++ 抽象工厂模式的优点：
+  + 当一个产品族中的多个对象被设计成一起工作时，它能保证客户端始终只使用同一个产品族中的对象
++ 抽象工厂模式的缺点：
+  + 产品族扩展非常困难，要增加一个系统的某一个产品，既要在AbstractFactory里加代码，又要在具体的里面加代码
+
