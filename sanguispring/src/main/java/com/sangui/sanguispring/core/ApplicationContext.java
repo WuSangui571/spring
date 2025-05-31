@@ -14,5 +14,5 @@ public interface ApplicationContext {
      * @return 返回单例的 Object 对象
      */
     Object getBean(String name);
-    <T>T getBean(String name,Class<T> requiredType);
+    //<T>T getBean(String name,Class<T> requiredType);
 }

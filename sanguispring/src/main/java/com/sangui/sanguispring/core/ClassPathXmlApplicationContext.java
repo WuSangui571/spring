@@ -44,8 +44,13 @@ public class ClassPathXmlApplicationContext implements ApplicationContext{
                 // 曝光
                 singletonMap.put(id, o);
                 log.info(singletonMap.toString());
+            }
+            for (Element bean : beanList) {
+                String id = bean.attributeValue("id");
+                String clazzStr = bean.attributeValue("class");
+                Class<?> clazz = Class.forName(clazzStr);
+                Object o = singletonMap.get(id);
                 List<Element> propertyList = bean.elements("property");
-                // 这里开始要重写，因为要先曝光，在赋值！！
                 for (Element property : propertyList) {
                     String propertyName = property.attributeValue("name");
                     Field field = clazz.getDeclaredField(propertyName);
@@ -53,14 +58,65 @@ public class ClassPathXmlApplicationContext implements ApplicationContext{
                     String setMethodName = "set" + propertyName.toUpperCase().charAt(0) + propertyName.substring(1);
                     Method setMethod = clazz.getDeclaredMethod(setMethodName,field.getType());
 
-                    String propertyValue = property.attributeValue("value");
-                    if (propertyValue != null) {
-                        setMethod.invoke(o,propertyValue);
+                    String value = property.attributeValue("value");
+                    if (value != null) {
+                        String propertyTypeSimpleName = field.getType().getSimpleName();
+                        switch (propertyTypeSimpleName) {
+                            case "boolean":
+                                setMethod.invoke(o,Boolean.parseBoolean(value));
+                                break;
+                            case "Boolean":
+                                setMethod.invoke(o,Boolean.valueOf(value));
+                                break;
+                            case "byte":
+                                setMethod.invoke(o,Byte.parseByte(value));
+                                break;
+                            case "Byte":
+                                setMethod.invoke(o,Byte.valueOf(value));
+                                break;
+                            case "short":
+                                setMethod.invoke(o,Short.parseShort(value));
+                                break;
+                            case "Short":
+                                setMethod.invoke(o,Short.valueOf(value));
+                                break;
+                            case "int":
+                                setMethod.invoke(o,Integer.parseInt(value));
+                                break;
+                            case "Integer":
+                                setMethod.invoke(o,Integer.valueOf(value));
+                                break;
+                            case "long":
+                                setMethod.invoke(o,Long.parseLong(value));
+                                break;
+                            case "Long":
+                                setMethod.invoke(o,Long.valueOf(value));
+                                break;
+                            case "float":
+                                setMethod.invoke(o,Float.parseFloat(value));
+                                break;
+                            case "Float":
+                                setMethod.invoke(o,Float.valueOf(value));
+                                break;
+                            case "double":
+                                setMethod.invoke(o,Double.parseDouble(value));
+                                break;
+                            case "Double":
+                                setMethod.invoke(o,Double.valueOf(value));
+                                break;
+                            case "char":
+                                setMethod.invoke(o,value.charAt(0));
+                                break;
+                            case "Character":
+                                setMethod.invoke(o,Character.valueOf(value.charAt(0)));
+                                break;
+                            default:
+                                setMethod.invoke(o,value);
+                        }
                     }
-
-                    String propertyRef = property.attributeValue("ref");
-                    if (propertyRef != null) {
-                        setMethod.invoke(o,);
+                    String ref = property.attributeValue("ref");
+                    if (ref != null) {
+                        setMethod.invoke(o,singletonMap.get(ref));
                     }
                 }
             }
@@ -72,11 +128,6 @@ public class ClassPathXmlApplicationContext implements ApplicationContext{
 
     @Override
     public Object getBean(String name) {
-        return null;
-    }
-
-    @Override
-    public <T> T getBean(String name, Class<T> requiredType) {
-        return null;
+        return singletonMap.get(name);
     }
 }
