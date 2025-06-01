@@ -12,6 +12,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
     public void login(){
+//        String s = null;
+//        System.out.println(s.toString());
         System.out.println("系统正在进行身份验证......");
+    }
+
+    public void logout(){
+        System.out.println("系统正在退出登录......");
     }
 }
