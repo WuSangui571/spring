@@ -6,11 +6,16 @@ import com.sangui.mall.service.OrderService;
 /**
  * @Author: sangui
  * @CreateTime: 2025-05-31
- * @Description: 目标对象
+ * @Description:
  * @Version: 1.0
  */
 public class OrderServiceImpl implements OrderService {
-    // 三个目标方法
+    @Override
+    public String getName() {
+        System.out.println("getName method execute！！");
+        return "zhangsan";
+    }
+
     @Override
     public void generate() {
         // 假设这是业务代码，模拟实际项目生成订单耗时

@@ -9,6 +9,12 @@ package com.sangui.mall.service;
  */
 public interface OrderService {
     /**
+     * 测试有返回值的情况
+     * @return 字符串
+     */
+    String getName();
+
+    /**
      * 生成订单
      */
     void generate();

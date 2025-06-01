@@ -289,7 +289,306 @@ public class Test {
 
 继续使用静态代理中的例子，一个 接口 和一个 实现类 。
 
+```java
+package com.sangui.mall.service;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-05-31
+ * @Description:
+ * @Version: 1.0
+ */
+public interface OrderService {
+    /**
+     * 测试有返回值的情况
+     * @return 字符串
+     */
+    String getName();
+    /**
+     * 生成订单
+     */
+    void generate();
+    /**
+     * 修改订单信息
+     */
+    void modify();
+    /**
+     * 查看订单明细
+     */
+    void detail();
+}
+```
+
+```java
+package com.sangui.mall.service.impl;
+import com.sangui.mall.service.OrderService;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-05-31
+ * @Description:
+ * @Version: 1.0
+ */
+public class OrderServiceImpl implements OrderService {
+    @Override
+    public String getName() {
+        System.out.println("getName method execute！！");
+        return "zhangsan";
+    }
+    @Override
+    public void generate() {
+        // 假设这是业务代码，模拟实际项目生成订单耗时
+        try {
+            Thread.sleep(1234);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("订单已生成！！");
+    }
+    @Override
+    public void modify() {
+        //假设这是业务代码，模拟实际项目修改订单耗时
+        try {
+            Thread.sleep(456);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("订单已修改！！");
+    }
+    @Override
+    public void detail() {
+        //假设这是业务代码，模拟实际项目查询订单耗时
+        try {
+            Thread.sleep(111);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("订单请查看！！.........展开");
+    }
+}
+```
+
+```java
+package com.sangui.mall.service;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description: 专门负责计时的调用处理器对象
+ * @Version: 1.0
+ */
+public class TimerInvocationHandler implements InvocationHandler {
+    OrderService target;
+    public TimerInvocationHandler() {
+    }
+    public TimerInvocationHandler(OrderService target) {
+        this.target = target;
+    }
+    /**
+     * 1.为什么强行要求必须实现 InvocationHandler 接口？
+     *      因为一个类的 实现接口必须要实现接口中的方法
+     *      一下这个方法必须是 invoke()，因为JDK是在底层调用 invoke（）方法的程序已经提前写好了
+     *      注意：invoke方法不是我们程序员负责调用的，
+     * 2.invoke方法什么时候被调用？
+     *      当代理对象调用代理方法的时候，就会被调用
+     * 3.invoke方法里的三个参数
+     *      第一个参数：proxy
+     *          是代理对象，这个参数使用较少
+     *      第二个参数：method
+     *          是目标对象的目标对象，要执行的方法就是它
+     *      第三个参数：args
+     *          是目标方法上的参数，即实参
+     */
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        //System.out.println(proxy);
+        long begin = System.currentTimeMillis();
+        Object returnValue = method.invoke(target, args);
+        long end = System.currentTimeMillis();
+        System.out.println("耗时：" + (end - begin) + "ms");
+        return returnValue;
+    }
+}
+```
+
 在动态代理中，就不需要手写 代理类 了，在动态代理中，XXXXProxy类 是可以动态生成的。这个类不需要写，只需要直接运行客户端程序即可。
+
+```java
+package com.sangui.mall.client;
+import com.sangui.mall.service.OrderService;
+import com.sangui.mall.service.TimerInvocationHandler;
+import com.sangui.mall.service.impl.OrderServiceImpl;
+import java.lang.reflect.Proxy;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description:
+ * @Version: 1.0
+ */
+public class Client {
+    public static void main(String[] args) {
+        // 创建目标对象
+        OrderService target = new OrderServiceImpl();
+        // 创建代理对象
+        /**
+         * 这是新建代理对象代码，
+         * 本质上，这个方法做了两件事：在内存中动态生成了代理类的字节码class，和new对象了
+         * 关于这个方法的三个参数，含义，怎么用。
+         * 1.ClassLoader loader
+         *      类加载器，在内存中生成的字节码也是class文件，要执行也得加载到内存中，加载类就需要类加载器，所以这里要指定类加载器
+         *      目标类的类加载器 必须和代理类的加载器一致
+         * 2.Class<?>[] interfaces
+         *      代理类和目标类要实现同一个接口，或同一些接口
+         * 3.InvocationHandler h
+         *      调用处理器，这是个接口
+         *      在调用处理器中编写的就是：增强代码
+         *      因为具体要什么代码，JDK代理技术它是不知道的
+         *      既然是接口，那一定要写实现类
+         *          为什么？------你可能会有疑问，为什么还会动手写接口的实现类，这不会类爆炸吗？不会，
+         *          因为这种调用处理器写一次就好
+         * 注意：代理对象和目标对象实现的接口一样，所以可以向下转型
+         */
+        OrderService proxy = (OrderService) Proxy.newProxyInstance(target.getClass().getClassLoader(),
+                                                                   target.getClass().getInterfaces(),
+                                                                   new TimerInvocationHandler(target));
+        // 调用代理对象的代理方法
+        proxy.detail();
+        proxy.modify();
+        proxy.generate();
+        String s = proxy.getName();
+        System.out.println(s);
+    }
+}
+```
+
+我们可以提供一个工具类：ProxyUtil，封装一个方法：
+
+```
+package com.sangui.mall.utils;
+import com.sangui.mall.service.TimerInvocationHandler;
+import java.lang.reflect.Proxy;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description:
+ * 对
+ * OrderService proxy = (OrderService) Proxy.newProxyInstance(target.getClass().getClassLoader(),
+ *                                                                    target.getClass().getInterfaces(),
+ *                                                                    new TimerInvocationHandler(target));
+ * 这一段代码进行的封装
+ * @Version: 1.0
+ */
+public class ProxyUtil {
+    private ProxyUtil() {
+    }
+    public static Object newProxyInstance(Object target){
+        return Proxy.newProxyInstance(target.getClass().getClassLoader(),
+                target.getClass().getInterfaces(),
+                new TimerInvocationHandler(target));
+    }
+}
+```
+
+这样客户端代码就不需要写那么繁琐了：
+
+```java
+//        OrderService proxy = (OrderService) Proxy.newProxyInstance(target.getClass().getClassLoader(),
+//                                                                   target.getClass().getInterfaces(),
+//                                                                   new TimerInvocationHandler(target))
+OrderService proxy = (OrderService)ProxyUtil.newProxyInstance(target);
+```
 
 ### 3.2 CGLIB动态代理
 
+CGLIB既可以代理接口，又可以代理类。底层采用继承的方式实现。所以被代理的目标类不能使用final修饰
+
+使用CGLIB，需要引入他的依赖
+
+```
+<dependency>
+    <groupId>cglib</groupId>
+    <artifactId>cglib</artifactId>
+    <version>3.3.0</version>
+</dependency>
+```
+
+```java
+package com.sangui.mall.service;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description:
+ * @Version: 1.0
+ */
+public class UserService {
+    public boolean login(String username, String password){
+        System.out.println("正在验证身份中......");
+        if ("admin".equals(username) && "123".equals(password)){
+            return true;
+        }
+        return false;
+    }
+    public void logout(){
+        System.out.println("退出系统中......");
+    }
+}
+```
+
+```java
+package com.sangui.mall.service;
+import net.sf.cglib.proxy.MethodInterceptor;
+import net.sf.cglib.proxy.MethodProxy;
+import java.lang.reflect.Method;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description:
+ * @Version: 1.0
+ */
+public class TimerMethodInterceptor implements MethodInterceptor {
+    @Override
+    public Object intercept(Object o, Method method, Object[] objects, MethodProxy methodProxy) throws Throwable {
+        long begin = System.currentTimeMillis();
+        Object returnValue = methodProxy.invokeSuper(o, objects);
+        long end = System.currentTimeMillis();
+        System.out.println("耗时：" + (end - begin) + "ms");
+        return returnValue;
+    }
+}
+```
+
+```java
+package com.sangui.mall.client;
+import com.sangui.mall.service.TimerMethodInterceptor;
+import com.sangui.mall.service.UserService;
+import net.sf.cglib.proxy.Enhancer;
+/**
+ * @Author: sangui
+ * @CreateTime: 2025-06-01
+ * @Description: 客户端程序
+ * @Version: 1.0
+ */
+public class Client {
+    public static void main(String[] args) {
+        // 创建字节码增强器对象
+        Enhancer enhancer = new Enhancer();
+
+        // 告诉CGLIB父类是谁，即目标类是谁。
+        enhancer.setSuperclass(UserService.class);
+
+        // 设置回调（等同于JDK动态代理当中的调用处理器，InvocationHandler）
+        enhancer.setCallback(new TimerMethodInterceptor());
+
+        // 创建代理对象（Step1:在内存中生成子类，即代理类的字节码文件，Step2:创建代理对象）
+        UserService agent = (UserService) enhancer.create();
+
+        agent.login("admin", "123");
+        agent.login("admin","123456");
+        agent.logout();
+    }
+}
+```
+
+对于高版本的JDK，如果使用CGLIB，需要在启动项中添加两个启动参数：
+
+- --add-opens java.base/java.lang=ALL-UNNAMED
+- --add-opens java.base/sun.net.util=ALL-UNNAMED
